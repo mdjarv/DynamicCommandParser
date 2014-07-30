@@ -141,7 +141,7 @@ int SerialDataParser::countValuesInBuffer()
 int SerialDataParser::lookupParserIndex(String cmd)
 {
   int index = -1;
-  for(int i = 0; i < MAX_COMMANDS; i++)
+  for(int i = 0; i < commandParsersCount; i++)
   {
     if(commandParsersLookup[i] == NULL)
     {
@@ -156,21 +156,33 @@ int SerialDataParser::lookupParserIndex(String cmd)
   return index;
 }
 
-void SerialDataParser::addParser(String command, void (*commandFunction)(String*, int))
+void SerialDataParser::addParser(String command, SerialDataParserFunction commandFunction)
 {
-  for(int i = 0; i < MAX_COMMANDS; i++)
+  SerialDataParserFunction *newParserList = new SerialDataParserFunction[commandParsersCount+1];
+  String *newParserListLookup = new String[commandParsersCount+1];
+
+  // Copy old parser list to new
+  for(int i = 0; i < commandParsersCount; i++)
   {
-    if(commandParsers[i] == NULL)
-    {
-      #ifdef DEBUG
-      Serial.print("Empty parser spot at ");
-      Serial.println(i);
-      #endif
-      
-      commandParsers[i] = commandFunction;
-      commandParsersLookup[i] = command;
-      
-      break;
-    }
+    newParserList[i] = commandParsers[i];
+    newParserListLookup[i] = commandParsersLookup[i];
   }
+
+  // Append new parser
+  newParserList[commandParsersCount] = commandFunction;
+  newParserListLookup[commandParsersCount] = command;
+
+  // Delete old parser list
+  delete [] commandParsers;
+
+  // Replace with new list
+  commandParsersCount++;
+  commandParsers = newParserList;
+  commandParsersLookup = newParserListLookup;
+
+  #ifdef DEBUG
+  Serial.print("Now handling ");
+  Serial.print(commandParsersCount);
+  Serial.println(" parsers");
+  #endif
 }

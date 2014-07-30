@@ -1,11 +1,15 @@
+/*
+  FANCY HEADER GOES HERE
+*/
+
 #ifndef SERIALDATAPARSER_H
 #define SERIALDATAPARSER_H
 
 // #define DEBUG
 
-#define MAX_COMMANDS 10
-
 #include "Arduino.h"
+
+typedef void (* SerialDataParserFunction) (String*, int);
 
 class SerialDataParser
 {
@@ -19,6 +23,8 @@ class SerialDataParser
       latestSerialEvent = 0;
       latestSerialEventTimeout = 1000;
       
+      commandParsersCount = 0;
+
       inCommand = false;
     };
     
@@ -52,8 +58,10 @@ class SerialDataParser
     String serialBuffer;
         
     // Command parsers
-    String commandParsersLookup[MAX_COMMANDS];
-    void (*commandParsers[MAX_COMMANDS])(String*, int);
+    unsigned int commandParsersCount;
+    String *commandParsersLookup;
+    SerialDataParserFunction *commandParsers;
+    
     int lookupParserIndex(String cmd);
     
     void parseCommand();
