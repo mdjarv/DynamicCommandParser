@@ -17,7 +17,7 @@ Start, stop and delimiter characters are configurable
 Simple usage example
 --------------------
 
-```Arduino
+```c++
 #include <SerialDataParser.h>
 
 SerialDataParser sdp('^', '$', ',');
