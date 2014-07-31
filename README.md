@@ -1,11 +1,11 @@
 Serial Data Parser for Arduino
 ==============================
-
-A library for M2M communicaton
-
-_Created by Mathias Dj√§rv, June 31, 2014._  
+_Created by Mathias Dj‰rv, June 31, 2014._  
 _Released under Creative Commons Attribution 4.0 International (CC BY 4.0)_  
 _http://creativecommons.org/licenses/by/4.0/_
+
+An Arduino library for simple M2M communicaton
+
 
 Description
 -----------
@@ -17,7 +17,7 @@ Start, stop and delimiter characters are configurable
 Simple usage example
 --------------------
 
-```
+```Arduino
 #include <SerialDataParser.h>
 
 SerialDataParser sdp('^', '$', ',');
