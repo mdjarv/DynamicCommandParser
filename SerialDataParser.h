@@ -32,6 +32,11 @@ class SerialDataParser
      * Read the serial input data
      */
     void readSerialData();
+
+    /**
+     * Lower level function to read a single char at a time
+     */
+    void appendChar(char c);
     
     /**
      * Add a parser function for a command, the parser will take the array of values as a parameter

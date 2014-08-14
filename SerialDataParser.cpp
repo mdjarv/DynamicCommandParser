@@ -1,6 +1,32 @@
 #include "SerialDataParser.h"
 #include "Arduino.h"
 
+void SerialDataParser::appendChar(char c)
+{
+  // Check if character is start or end of command
+  if(c == startOfData)
+  {
+    inCommand = true;
+    serialBuffer = "";
+  }
+  else if (c == endOfData)
+  {
+    if(inCommand)
+    {
+      parseCommand();
+    }
+    
+    inCommand = false;
+  }
+  else
+  {
+    if(inCommand)
+    {
+      serialBuffer += c;
+    }
+  }
+}
+
 void SerialDataParser::readSerialData()
 {
   if(Serial.available())
@@ -16,28 +42,7 @@ void SerialDataParser::readSerialData()
     {
       char c = Serial.read();
 
-      // Check if character is start or end of command
-      if(c == startOfData)
-      {
-        inCommand = true;
-        serialBuffer = "";
-      }
-      else if (c == endOfData)
-      {
-        if(inCommand)
-        {
-          parseCommand();
-        }
-        
-        inCommand = false;
-      }
-      else
-      {
-        if(inCommand)
-        {
-          serialBuffer += c;
-        }
-      }
+      appendChar(c);
     }
     latestSerialEvent = millis();
   }
