@@ -5,6 +5,8 @@
 #ifndef SERIALDATAPARSER_H
 #define SERIALDATAPARSER_H
 
+#define MAX_VALUE_COUNT 10
+
 // #define DEBUG
 
 #include "Arduino.h"
@@ -19,9 +21,6 @@ class SerialDataParser
       startOfData = sod;
       endOfData = eod;
       delimiter = delim;
-      
-      latestSerialEvent = 0;
-      latestSerialEventTimeout = 1000;
       
       commandParsersCount = 0;
 
@@ -43,24 +42,14 @@ class SerialDataParser
      */
     void addParser(String command, void (*commandFunction)(String*, int));
 
-    /**
-     * Shorthand function to print error message with the correct start, end and delimiter.
-     * Example output:
-     *   ^ERROR,TEST was not a valid command$
-     */
-    void error(String message);
-    
   private:
     char startOfData;
     char endOfData;
     char delimiter;
     
-    unsigned long latestSerialEvent;
-    unsigned long latestSerialEventTimeout;
-    
     bool inCommand;
     
-    String serialBuffer;
+    char serialBuffer[30];
         
     // Command parsers
     unsigned int commandParsersCount;
@@ -68,9 +57,8 @@ class SerialDataParser
     SerialDataParserFunction *commandParsers;
     
     int lookupParserIndex(String cmd);
-    
     void parseCommand();
-    int countValuesInBuffer();
+    int indexOf(char *str, char c);
 };
 
 #endif

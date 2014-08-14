@@ -7,7 +7,7 @@ void SerialDataParser::appendChar(char c)
   if(c == startOfData)
   {
     inCommand = true;
-    serialBuffer = "";
+    serialBuffer[0] = '\0';
   }
   else if (c == endOfData)
   {
@@ -22,7 +22,9 @@ void SerialDataParser::appendChar(char c)
   {
     if(inCommand)
     {
-      serialBuffer += c;
+      int len = strlen(serialBuffer);
+      serialBuffer[len] = c;
+      serialBuffer[len+1] = '\0';
     }
   }
 }
@@ -31,20 +33,12 @@ void SerialDataParser::readSerialData()
 {
   if(Serial.available())
   {
-    if(millis() - latestSerialEvent >= latestSerialEventTimeout)
-    {
-      // If latest serial event has timed out, clear the serial buffer
-      serialBuffer = "";
-      inCommand = false;
-    }
-    
     while(Serial.available() > 0)
     {
       char c = Serial.read();
 
       appendChar(c);
     }
-    latestSerialEvent = millis();
   }
 }
 
@@ -54,55 +48,36 @@ void SerialDataParser::parseCommand()
   Serial.print("Parsing command: ");
   Serial.println(serialBuffer);
   #endif
-  
-  // Split into array
+
   int parserIndex;
-  int valueCount = countValuesInBuffer();
-  
-  #ifdef DEBUG
-  Serial.print("valueCount = ");
-  Serial.println(valueCount);
-  #endif
-  
-  String *valueArray = new String[valueCount];
-  
-  if(valueCount == 1)
+
+  if(indexOf(serialBuffer, delimiter) <= 0)
   {
     parserIndex = lookupParserIndex(serialBuffer);
-    valueArray[0] = serialBuffer;
 
-    #ifdef DEBUG
-    Serial.print("parserIndex = ");
-    Serial.println(parserIndex);
-    #endif
-
-    if(parserIndex < 0)
+    if(parserIndex >= 0)
     {
-      error("No valid parser found for " + valueArray[0]);
-    }
-    else
-    {
-      commandParsers[parserIndex](valueArray, valueCount);
+      String *valueArray = new String[1];
+      valueArray[0] = serialBuffer;
+      commandParsers[parserIndex](valueArray, 1);
+      delete[] valueArray;
     }
   }
   else
   {
     // Split values into array
+    String *valueArray = new String[MAX_VALUE_COUNT];
     
-    int separator = serialBuffer.indexOf(delimiter);
-    int lastSeparator = 0;
     int valueIndex = 0;
 
-    while(separator > 0)
+    char * pch;
+    pch = strtok (serialBuffer,",");
+    while (pch != NULL)
     {
-      valueArray[valueIndex++] = serialBuffer.substring(lastSeparator, separator);
-      lastSeparator = separator+1;
-      separator = serialBuffer.indexOf(delimiter, separator+1);
+      valueArray[valueIndex++] = pch;
+      pch = strtok (NULL, ",");
     }
 
-    valueArray[valueIndex] = serialBuffer.substring(lastSeparator);
-    
-    
     parserIndex = lookupParserIndex(valueArray[0]);
     
     #ifdef DEBUG
@@ -110,37 +85,21 @@ void SerialDataParser::parseCommand()
     Serial.println(parserIndex);
     #endif
     
-    if(parserIndex < 0)
+    if(parserIndex >= 0)
     {
-      error("No valid parser found for " + valueArray[0]);
+      commandParsers[parserIndex](valueArray, valueIndex);
     }
-    else
-    {
-      commandParsers[parserIndex](valueArray, valueCount);
-    }
+    delete[] valueArray;
   }
-
-  delete[] valueArray;
 }
 
-void SerialDataParser::error(String message)
+int SerialDataParser::indexOf(char *str, char c)
 {
-  Serial.print(startOfData);
-  Serial.print("ERROR");
-  Serial.print(delimiter);
-  Serial.print(message);
-  Serial.println(endOfData);
-}
+  char *ptr = strchr(str, (int)c);
+  if(ptr)
+    return ptr - str;
 
-int SerialDataParser::countValuesInBuffer()
-{
-  int valueCount = 1;
-  int index = 0;
-  while((index = serialBuffer.indexOf(delimiter, index+1)) > 0)
-  {
-    valueCount++;
-  }
-  return valueCount;
+  return -1;
 }
 
 int SerialDataParser::lookupParserIndex(String cmd)
@@ -152,7 +111,7 @@ int SerialDataParser::lookupParserIndex(String cmd)
     {
       break;
     }
-    if(commandParsersLookup[i] == cmd)
+    if(cmd == commandParsersLookup[i])
     {
       return i;
     }
