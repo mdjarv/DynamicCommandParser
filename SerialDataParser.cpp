@@ -1,152 +1,82 @@
 #include "SerialDataParser.h"
-#include "Arduino.h"
+
+void SerialDataParser::addParser(char *cmd, ParserFunction function)
+{
+  mParserLookupSize++;
+  mParserLookup = (ParserFunctionLookup*)realloc(mParserLookup, (mParserLookupSize) * sizeof(ParserFunctionLookup));
+  mParserLookup[mParserLookupSize-1].command = cmd;
+  mParserLookup[mParserLookupSize-1].function = function;
+}
+
+void SerialDataParser::append(char *str)
+{
+  for(int i = 0; i < strlen(str); i++)
+  {
+    appendChar(str[i]);
+  }
+}
 
 void SerialDataParser::appendChar(char c)
 {
-  // Check if character is start or end of command
-  if(c == startOfData)
+  int bufferLength = strlen(buffer);
+
+  if(c == mStart)
   {
-    inCommand = true;
-    serialBuffer[0] = '\0';
+    mInCommand = true;
+    buffer[0] = 0;
+    return;
   }
-  else if (c == endOfData)
+  else if(c == mEnd)
   {
-    if(inCommand)
-    {
-      parseCommand();
-    }
-    
-    inCommand = false;
+    parseBuffer();
+    buffer[0] = '\0';
+    mInCommand = false;
   }
-  else
+  else if(mInCommand)
   {
-    if(inCommand)
-    {
-      int len = strlen(serialBuffer);
-      serialBuffer[len] = c;
-      serialBuffer[len+1] = '\0';
-    }
+    buffer[bufferLength] = c;
+    buffer[bufferLength+1] = '\0';
   }
 }
 
-void SerialDataParser::readSerialData()
+void SerialDataParser::parseBuffer()
 {
-  if(Serial.available())
-  {
-    while(Serial.available() > 0)
-    {
-      char c = Serial.read();
+  // Split buffer
+  int partCount = getBufferPartCount();
+  char **parts = (char**)malloc(partCount * sizeof(char*));
 
-      appendChar(c);
+  parts[0] = buffer;
+  int currentPart = 0;
+
+  for(int i = 0; buffer[i] != 0; i++)
+  {
+    if(buffer[i] == mDelimiter)
+    {
+      buffer[i] = 0;
+      currentPart++;
+      parts[currentPart] = &buffer[i+1];
     }
   }
-}
 
-void SerialDataParser::parseCommand()
-{
-  #ifdef DEBUG
-  Serial.print("Parsing command: ");
-  Serial.println(serialBuffer);
-  #endif
-
-  int parserIndex;
-
-  if(indexOf(serialBuffer, delimiter) <= 0)
+  for(int i = 0; i < mParserLookupSize; i++)
   {
-    parserIndex = lookupParserIndex(serialBuffer);
-
-    if(parserIndex >= 0)
+    if(strcmp(mParserLookup[i].command, parts[0]) == 0)
     {
-      String *valueArray = new String[1];
-      valueArray[0] = serialBuffer;
-      commandParsers[parserIndex](valueArray, 1);
-      delete[] valueArray;
-    }
-  }
-  else
-  {
-    // Split values into array
-    String *valueArray = new String[MAX_VALUE_COUNT];
-    
-    int valueIndex = 0;
-
-    char * pch;
-    pch = strtok (serialBuffer,",");
-    while (pch != NULL)
-    {
-      valueArray[valueIndex++] = pch;
-      pch = strtok (NULL, ",");
-    }
-
-    parserIndex = lookupParserIndex(valueArray[0]);
-    
-    #ifdef DEBUG
-    Serial.print("parserIndex = ");
-    Serial.println(parserIndex);
-    #endif
-    
-    if(parserIndex >= 0)
-    {
-      commandParsers[parserIndex](valueArray, valueIndex);
-    }
-    delete[] valueArray;
-  }
-}
-
-int SerialDataParser::indexOf(char *str, char c)
-{
-  char *ptr = strchr(str, (int)c);
-  if(ptr)
-    return ptr - str;
-
-  return -1;
-}
-
-int SerialDataParser::lookupParserIndex(String cmd)
-{
-  int index = -1;
-  for(int i = 0; i < commandParsersCount; i++)
-  {
-    if(commandParsersLookup[i] == NULL)
-    {
+      mParserLookup[i].function(parts, partCount);
       break;
     }
-    if(cmd == commandParsersLookup[i])
-    {
-      return i;
-    }
   }
-  
-  return index;
+
+  free(parts);
 }
 
-void SerialDataParser::addParser(String command, SerialDataParserFunction commandFunction)
+int SerialDataParser::getBufferPartCount()
 {
-  SerialDataParserFunction *newParserList = new SerialDataParserFunction[commandParsersCount+1];
-  String *newParserListLookup = new String[commandParsersCount+1];
-
-  // Copy old parser list to new
-  for(int i = 0; i < commandParsersCount; i++)
+  int count = 1;
+  for(int i = 0; i < strlen(buffer); i++)
   {
-    newParserList[i] = commandParsers[i];
-    newParserListLookup[i] = commandParsersLookup[i];
+    if(buffer[i] == mDelimiter)
+      count++;
   }
-
-  // Append new parser
-  newParserList[commandParsersCount] = commandFunction;
-  newParserListLookup[commandParsersCount] = command;
-
-  // Delete old parser list
-  delete [] commandParsers;
-
-  // Replace with new list
-  commandParsersCount++;
-  commandParsers = newParserList;
-  commandParsersLookup = newParserListLookup;
-
-  #ifdef DEBUG
-  Serial.print("Now handling ");
-  Serial.print(commandParsersCount);
-  Serial.println(" parsers");
-  #endif
+  return count;
 }

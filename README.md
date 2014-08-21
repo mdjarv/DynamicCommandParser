@@ -6,13 +6,12 @@ _http://creativecommons.org/licenses/by/4.0/_
 
 An Arduino library for simple M2M communicaton
 
-
 Description
 -----------
 
 This library makes it easy to parse serial commands with (or without) variables.
 
-Start, stop and delimiter characters are configurable
+Start, stop and delimiter characters are configurable, and the command buffer size is currently set to 64 characters.
 
 Simple usage example
 --------------------
@@ -22,7 +21,7 @@ Simple usage example
 
 SerialDataParser sdp('^', '$', ',');
 
-void myParser(String *values, int valueCount)
+void myParser(char **values, int valueCount)
 {
     
     Serial.println("myParser:");
@@ -42,7 +41,10 @@ void setup()
 
 void loop()
 {
-    sdp.readSerialData();
+  while(Serial.available())
+  {
+    sdp.appendChar(Serial.read());
+  }
 }
 
 ```
@@ -58,16 +60,6 @@ myParser:
 
 Since the library does not care if you use linebreaks or not you can string multiple commands on one row:
 
-`^CMD,v1,v2$ ^CMD,v3,v4$ ^CMD$ ^foo$`
+`^CMD,v1,v2$ ^CMD,v3,v4$ ^CMD$`
 
-The above example will also trigger an error message as the `foo` command does not have a parser. The error message will look like this:
-
-`^ERROR,No valid parser found for foo$`
-
-The *values memory will be deleted by SerialDataParser after the function has exited
-
-Command Timeout
----------------
-The library also features a command timeout.
-
-If a start-of-command has been read (but not the end-of-command) and no serial activity has ocurred within a second it will discard the buffer and ignore any following end-of-command on the next serial event.
+However it is worth noting that not using linebreaks at the end of sending may cause your serial connection to not automatically flush its buffers which will cause a delay before the Arduino catches the string. This can be avoided by explicitly flushing the buffers after sending.

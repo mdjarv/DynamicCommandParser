@@ -22,16 +22,16 @@
 SerialDataParser sdp('^', '$', ',');
 
 // Parser for the COP command
-void commandOnlyParser(String *values, int valueCount)
+void commandOnlyParser(char **values, int valueCount)
 {
   if(valueCount > 1)
-    sdp.error("commandOnlyParser does not like variables");
+    Serial.println("commandOnlyParser does not like variables");
   else
     Serial.println("commandOnlyParser executed successfully");
 }
 
 // Parser for the MVP command
-void multipleVariableParser(String *values, int valueCount)
+void multipleVariableParser(char **values, int valueCount)
 {
   Serial.println("multipleVariableParser:");
   for(int i = 0; i < valueCount; i++)
@@ -44,7 +44,7 @@ void multipleVariableParser(String *values, int valueCount)
 }
 
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(9600);
 
   // Add the two parser commands to the SerialDataParser
   sdp.addParser("COP", commandOnlyParser);
@@ -57,15 +57,8 @@ void loop() {
   unsigned long start;
   unsigned long finish;
   
-  start = millis();
-  sdp.readSerialData();
-  finish = millis()-start;
-
-  if(finish > 1)
+  while(Serial.available() > 0)
   {
-    Serial.print("readSerialData() took ");
-    Serial.print(finish);
-    Serial.println(" ms");
+    sdp.appendChar(Serial.read());
   }
-  delay(100);
 }

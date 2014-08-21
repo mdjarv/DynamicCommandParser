@@ -1,64 +1,54 @@
-/*
-  FANCY HEADER GOES HERE
-*/
-
 #ifndef SERIALDATAPARSER_H
 #define SERIALDATAPARSER_H
 
-#define MAX_VALUE_COUNT 10
-
-// #define DEBUG
-
 #include "Arduino.h"
 
-typedef void (* SerialDataParserFunction) (String*, int);
+#define BUFFER_SIZE 64
+
+typedef void (* ParserFunction)(char **values, int valueCount);
+
+typedef struct
+{
+  char *command;
+  ParserFunction function;
+} ParserFunctionLookup;
 
 class SerialDataParser
 {
-  public:
-    SerialDataParser(char sod, char eod, char delim)
-    {
-      startOfData = sod;
-      endOfData = eod;
-      delimiter = delim;
-      
-      commandParsersCount = 0;
+public:
+  SerialDataParser(char start, char end, char delim)
+  {
+    mInCommand = false;
+    mStart = start;
+    mEnd = end;
+    mDelimiter = delim;
 
-      inCommand = false;
-    };
-    
-    /**
-     * Read the serial input data
-     */
-    void readSerialData();
+    mParserLookup = NULL;
+    mParserLookupSize = 0;
+    buffer[0] = '\0';
+  }
 
-    /**
-     * Lower level function to read a single char at a time
-     */
-    void appendChar(char c);
-    
-    /**
-     * Add a parser function for a command, the parser will take the array of values as a parameter
-     */
-    void addParser(String command, void (*commandFunction)(String*, int));
+  ~SerialDataParser()
+  {
+    free(mParserLookup);
+  }
 
-  private:
-    char startOfData;
-    char endOfData;
-    char delimiter;
-    
-    bool inCommand;
-    
-    char serialBuffer[30];
-        
-    // Command parsers
-    unsigned int commandParsersCount;
-    String *commandParsersLookup;
-    SerialDataParserFunction *commandParsers;
-    
-    int lookupParserIndex(String cmd);
-    void parseCommand();
-    int indexOf(char *str, char c);
+  void addParser(char *cmd, ParserFunction function);
+  void append(char *str);
+  void appendChar(char c);
+
+private:
+  bool mInCommand;
+  char buffer[BUFFER_SIZE];
+  char mStart;
+  char mEnd;
+  char mDelimiter;
+
+  size_t mParserLookupSize;
+  ParserFunctionLookup *mParserLookup;
+
+  void parseBuffer();
+  int getBufferPartCount();
 };
 
 #endif
