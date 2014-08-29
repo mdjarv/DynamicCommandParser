@@ -14,10 +14,10 @@ typedef struct
   ParserFunction function;
 } ParserFunctionLookup;
 
-class SerialDataParser
+class DynamicCommandParser
 {
 public:
-  SerialDataParser(char start, char end, char delim)
+  DynamicCommandParser(char start, char end, char delim)
   {
     mInCommand = false;
     mStart = start;
@@ -29,7 +29,7 @@ public:
     buffer[0] = '\0';
   }
 
-  ~SerialDataParser()
+  ~DynamicCommandParser()
   {
     free(mParserLookup);
   }

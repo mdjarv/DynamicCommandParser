@@ -1,4 +1,4 @@
-SerialDataParser KEYWORD1
-append           KEYWORD2
-appendChar       KEYWORD3
-addParser        KEYWORD4
+DynamicCommandParser KEYWORD1
+append               KEYWORD2
+appendChar           KEYWORD3
+addParser            KEYWORD4

@@ -1,6 +1,6 @@
-#include "SerialDataParser.h"
+#include "DynamicCommandParser.h"
 
-void SerialDataParser::addParser(char *cmd, ParserFunction function)
+void DynamicCommandParser::addParser(char *cmd, ParserFunction function)
 {
   mParserLookupSize++;
   mParserLookup = (ParserFunctionLookup*)realloc(mParserLookup, (mParserLookupSize) * sizeof(ParserFunctionLookup));
@@ -8,7 +8,7 @@ void SerialDataParser::addParser(char *cmd, ParserFunction function)
   mParserLookup[mParserLookupSize-1].function = function;
 }
 
-void SerialDataParser::append(char *str)
+void DynamicCommandParser::append(char *str)
 {
   for(size_t i = 0; i < strlen(str); i++)
   {
@@ -16,7 +16,7 @@ void SerialDataParser::append(char *str)
   }
 }
 
-void SerialDataParser::appendChar(char c)
+void DynamicCommandParser::appendChar(char c)
 {
   size_t bufferLength = strlen(buffer);
 
@@ -39,7 +39,7 @@ void SerialDataParser::appendChar(char c)
   }
 }
 
-void SerialDataParser::parseBuffer()
+void DynamicCommandParser::parseBuffer()
 {
   // Split buffer
   int partCount = getBufferPartCount();
@@ -70,7 +70,7 @@ void SerialDataParser::parseBuffer()
   free(parts);
 }
 
-int SerialDataParser::getBufferPartCount()
+int DynamicCommandParser::getBufferPartCount()
 {
   int count = 1;
   for(size_t i = 0; i < strlen(buffer); i++)

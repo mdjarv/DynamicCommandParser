@@ -1,5 +1,5 @@
 {
-	"name": "SerialDataParser",
+	"name": "DynamicCommandParser",
 	"author": "Mathias Djarv <mathias.djarv@gmail.com>",
 	"license": "CC BY 4.0",
 	"version": "0.1.0",
