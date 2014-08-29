@@ -10,7 +10,7 @@ void SerialDataParser::addParser(char *cmd, ParserFunction function)
 
 void SerialDataParser::append(char *str)
 {
-  for(int i = 0; i < strlen(str); i++)
+  for(size_t i = 0; i < strlen(str); i++)
   {
     appendChar(str[i]);
   }
@@ -18,7 +18,7 @@ void SerialDataParser::append(char *str)
 
 void SerialDataParser::appendChar(char c)
 {
-  int bufferLength = strlen(buffer);
+  size_t bufferLength = strlen(buffer);
 
   if(c == mStart)
   {
@@ -58,7 +58,7 @@ void SerialDataParser::parseBuffer()
     }
   }
 
-  for(int i = 0; i < mParserLookupSize; i++)
+  for(size_t i = 0; i < mParserLookupSize; i++)
   {
     if(strcmp(mParserLookup[i].command, parts[0]) == 0)
     {
@@ -73,7 +73,7 @@ void SerialDataParser::parseBuffer()
 int SerialDataParser::getBufferPartCount()
 {
   int count = 1;
-  for(int i = 0; i < strlen(buffer); i++)
+  for(size_t i = 0; i < strlen(buffer); i++)
   {
     if(buffer[i] == mDelimiter)
       count++;

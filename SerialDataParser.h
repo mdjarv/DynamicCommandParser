@@ -1,7 +1,8 @@
 #ifndef SERIALDATAPARSER_H
 #define SERIALDATAPARSER_H
 
-#include "Arduino.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define BUFFER_SIZE 64
 

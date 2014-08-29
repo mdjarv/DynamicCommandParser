@@ -1,0 +1,7 @@
+{
+	"name": "SerialDataParser",
+	"author": "Mathias Djarv <mathias.djarv@gmail.com>",
+	"license": "CC BY 4.0",
+	"version": "0.1.0",
+	"description": "A library for simple M2M communicaton"
+}
